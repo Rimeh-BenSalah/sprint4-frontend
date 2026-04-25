@@ -1,8 +1,10 @@
 package com.rimeh.livres.sercurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,6 +17,8 @@ import java.util.Collections;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+	@Autowired
+	KeycloakRoleConverter  keycloakRoleConverter;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception
@@ -44,20 +48,18 @@ public class SecurityConfig {
 	        )
 
 	        // Autorisations
-	        .authorizeHttpRequests(requests -> requests
-	            .requestMatchers("/api/livre/all/**").hasAnyAuthority("ADMIN","USER")
-	            .requestMatchers(HttpMethod.GET,"/api/livre/getbyid/**").hasAnyAuthority("ADMIN","USER")
-	            .requestMatchers(HttpMethod.POST,"/api/addlivre/**").hasAuthority("ADMIN")
-	            .requestMatchers(HttpMethod.PUT,"/api/updatelivre/**").hasAuthority("ADMIN")
-	            .requestMatchers(HttpMethod.DELETE,"/api/dellivre/**").hasAuthority("ADMIN")
-	            .anyRequest().authenticated()
-	        )
+	        .authorizeHttpRequests( requests ->
+	        requests.requestMatchers("/api/all/**").permitAll() //.hasAnyAuthority("ADMIN","USER")
+	        .requestMatchers(HttpMethod.GET,"/api/getbyid/**").hasAnyAuthority("ADMIN","USER")
+	        // .requestMatchers(HttpMethod.POST,"/api/addliv/**").hasAuthority("ADMIN")
+	        .requestMatchers(HttpMethod.PUT,"/api/updateliv/**").hasAuthority("ADMIN")
+	        .requestMatchers(HttpMethod.DELETE,"/api/delliv/**").hasAuthority("ADMIN")
+	        .anyRequest().authenticated() )
+	        //.oauth2ResourceServer(rs -> rs.jwt(Customizer.withDefaults()));
+	        .oauth2ResourceServer(ors->ors.jwt(jwt-> 
+	               jwt.jwtAuthenticationConverter(keycloakRoleConverter)));
 
-	        // JWT filter
-	        .addFilterBefore(
-	            new JWTAuthorizationFilter(),
-	            BasicAuthenticationFilter.class
-	        );
+	        
 
 	    return http.build();
 	}

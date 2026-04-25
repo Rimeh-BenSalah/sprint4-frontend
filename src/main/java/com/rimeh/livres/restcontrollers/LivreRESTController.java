@@ -3,6 +3,7 @@ package com.rimeh.livres.restcontrollers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,6 +58,9 @@ public class LivreRESTController {
 	@GetMapping("/livsByName/{nom}")
 	public List<Livre> findByNomLivreContains(@PathVariable("nom") String nom) {
 	return livreService.findByNomLivreContains(nom);
+	}
+	@GetMapping("/auth") Authentication getAuth(Authentication auth)
+	{ return auth;
 	}
 	
 }
